@@ -46,6 +46,9 @@
     <button data-page="stocks">🤖<span>AI 추천</span></button>
   </div>
 
+  <div class="head"><h3>오늘 해야 할 일</h3><button data-page="reservations">예약 보기</button></div>
+  <div id="todayTask"></div>
+
   <div class="head"><h3>오늘의 AI 추천</h3><button data-page="stocks">전체 보기</button></div>
   <div id="aiList" class="stack"></div>
 
@@ -59,6 +62,9 @@
 </section>
 
 <section id="trade" class="page">
+  <div class="trade-steps">
+    <span>1 종목</span><span>2 가격·수량</span><span>3 예약선택</span><span>4 확정</span>
+  </div>
   <div class="card">
     <h2>거래 입력</h2>
     <div class="grid">

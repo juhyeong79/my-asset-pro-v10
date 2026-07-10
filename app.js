@@ -33,14 +33,65 @@ function page(id){$$(".page").forEach(x=>x.classList.toggle("active",x.id===id))
 function render(){renderHome();renderStocks();renderSelects();renderReservations();renderHistory();renderSettings();save()}
 function renderHome(){
  const total=state.stocks.reduce((a,s)=>a+value(s),0),p=state.stocks.reduce((a,s)=>a+pnl(s),0);
- $("#hello").textContent=`안녕하세요, ${state.settings.name}님.`;$("#totalValue").textContent=won(total);$("#totalPnl").textContent=won(p);$("#stockCount").textContent=`${state.stocks.length}개`;$("#resCount").textContent=`${state.reservations.filter(x=>x.status==="waiting").length}건`;$("#fxTop").textContent=fmt(fx());
- const g=state.stocks.find(s=>s.id===state.settings.goal)||state.stocks[0];if(g){$("#goalName").textContent=g.name;$("#goalText").textContent=`${fmt(g.qty)} / ${fmt(g.target)}주`;$("#goalBar").style.width=`${Math.min(100,g.target?g.qty/g.target*100:0)}%`}
+ $("#hello").textContent=`안녕하세요, ${state.settings.name}님.`;
+ $("#totalValue").textContent=won(total);
+ $("#totalPnl").textContent=won(p);
+ $("#stockCount").textContent=`${state.stocks.length}개`;
+ $("#resCount").textContent=`${state.reservations.filter(x=>x.status==="waiting").length}건`;
+ $("#fxTop").textContent=fmt(fx());
+
+ const g=state.stocks.find(s=>s.id===state.settings.goal)||state.stocks[0];
+ if(g){
+   $("#goalName").textContent=g.name;
+   $("#goalText").textContent=`${fmt(g.qty)} / ${fmt(g.target)}주`;
+   $("#goalBar").style.width=`${Math.min(100,g.target?g.qty/g.target*100:0)}%`;
+ }
+
+ const waiting=state.reservations.filter(r=>r.status==="waiting");
+ const nearest=waiting.sort((a,b)=>Math.abs(a.buyPrice-(state.stocks.find(s=>s.id===a.stockId)?.price||a.buyPrice))-Math.abs(b.buyPrice-(state.stocks.find(s=>s.id===b.stockId)?.price||b.buyPrice)))[0];
+ if(nearest){
+   $("#todayTask").innerHTML=`<div class="todo-card">
+     <h4>${nearest.name} 예약매수 확인</h4>
+     <p>${nearest.buyQty}주 예약 · ${nearest.reason}</p>
+     <div class="todo-line"><span class="todo-price">${fmt(nearest.buyPrice)}</span><button data-page="reservations">확인</button></div>
+   </div>`;
+ }else{
+   $("#todayTask").innerHTML=`<div class="todo-card"><h4>오늘은 대기</h4><p>체결을 기다리는 예약이 없습니다. 성급한 거래보다 원칙 유지가 우선입니다.</p></div>`;
+ }
+
  const picks=[...state.stocks].sort((a,b)=>Math.abs(rate(b))-Math.abs(rate(a))).slice(0,3);
- $("#aiList").innerHTML=picks.map(s=>{const [l,r]=advice(s);return `<button class="ai-card" data-trade="${s.id}"><div><h4>${s.name}</h4><p>${r}</p></div><span class="badge">${l}</span></button>`}).join("")||'<div class="empty">종목을 추가하세요.</div>';
- $("#homeStocks").innerHTML=state.stocks.slice(0,5).map(s=>`<div class="stock-card"><div class="stock-top"><div><h3>${s.name}</h3><div class="meta">${s.ticker} · ${s.market==="US"?"미국":"국내"}</div></div><b class="${pnl(s)>=0?"pos":"neg"}">${won(pnl(s))}</b></div><div class="info"><div><span>보유</span><b>${fmt(s.qty)}주</b></div><div><span>현재가</span><b>${money(s.price,cur(s))}</b></div><div><span>수익률</span><b>${(rate(s)*100).toFixed(2)}%</b></div></div></div>`).join("");
+ $("#aiList").innerHTML=picks.map(s=>{
+   const [label,reason]=advice(s);
+   return `<button class="ai-card" data-trade="${s.id}">
+     <div class="ai-main">
+       <div class="ai-topline"><h4>${s.name}</h4><span class="badge">${label}</span></div>
+       <div class="ai-stats"><span>수익률 ${(rate(s)*100).toFixed(2)}%</span><span>추천 ${recQty(s)}주</span></div>
+       <div class="ai-reason">${reason}</div>
+     </div>
+   </button>`;
+ }).join("")||'<div class="empty">종목을 추가하세요.</div>';
+
+ $("#homeStocks").innerHTML=state.stocks.slice(0,5).map(s=>{
+   const [label]=advice(s);
+   const waitingCount=state.reservations.filter(r=>r.stockId===s.id&&r.status==="waiting").length;
+   return `<div class="stock-card">
+     <div class="stock-top">
+       <div><h3>${s.name}</h3><div class="meta">${s.ticker} · ${s.market==="US"?"미국":"국내"}</div></div>
+       <b class="${pnl(s)>=0?"pos":"neg"}">${won(pnl(s))}</b>
+     </div>
+     <div class="info">
+       <div><span>보유</span><b>${fmt(s.qty)}주</b></div>
+       <div><span>평균가</span><b>${money(s.avg,cur(s))}</b></div>
+       <div><span>현재가</span><b>${money(s.price,cur(s))}</b></div>
+       <div><span>수익률</span><b>${(rate(s)*100).toFixed(2)}%</b></div>
+       <div><span>AI 추천</span><b>${label}</b></div>
+       <div><span>대기 예약</span><b>${waitingCount}건</b></div>
+     </div>
+   </div>`;
+ }).join("");
+
  $$("[data-trade]").forEach(b=>b.onclick=()=>{page("trade");$("#tradeStock").value=b.dataset.trade;refreshTrade()})
-}
-function renderStocks(){
+}function renderStocks(){
  $("#stockList").innerHTML=state.stocks.map(s=>{const [l]=advice(s);return `<article class="stock-card"><div class="stock-top"><div><h3>${s.name}</h3><div class="meta">${s.ticker} · ${s.mode}</div></div><b class="${pnl(s)>=0?"pos":"neg"}">${won(pnl(s))}</b></div><div class="info"><div><span>보유</span><b>${fmt(s.qty)}주</b></div><div><span>평균가</span><b>${money(s.avg,cur(s))}</b></div><div><span>현재가</span><b>${money(s.price,cur(s))}</b></div><div><span>수익률</span><b>${(rate(s)*100).toFixed(2)}%</b></div><div><span>추천수량</span><b>${recQty(s)}주</b></div><div><span>AI추천</span><b>${l}</b></div></div><div class="actions"><button class="edit" data-edit="${s.id}">수정</button><button class="use" data-use="${s.id}">거래</button><button class="delete" data-del="${s.id}">삭제</button></div></article>`}).join("")||'<div class="empty">등록된 종목이 없습니다.</div>';
  $$("[data-edit]").forEach(b=>b.onclick=()=>openStock(b.dataset.edit));$$("[data-use]").forEach(b=>b.onclick=()=>{page("trade");$("#tradeStock").value=b.dataset.use;refreshTrade()});$$("[data-del]").forEach(b=>b.onclick=()=>{if(confirm("삭제할까요?")){state.stocks=state.stocks.filter(s=>s.id!==b.dataset.del);render()}})
 }

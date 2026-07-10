@@ -24,3 +24,68 @@ dialog{border:0;border-radius:21px;padding:0;width:min(92vw,520px);box-shadow:0 
 #toast{position:fixed;left:50%;bottom:95px;transform:translateX(-50%) translateY(20px);background:#102a43;color:#fff;padding:11px 16px;border-radius:999px;opacity:0;transition:.2s;z-index:50;white-space:nowrap}#toast.show{opacity:1;transform:translateX(-50%)}
 .empty{background:#fff;border:1px dashed #b9c7d6;border-radius:15px;padding:20px;text-align:center;color:var(--muted)}
 @media(min-width:700px){.metrics{grid-template-columns:repeat(3,1fr)}}
+
+
+/* ===== v10.1 mobile polish ===== */
+.top{
+  padding:calc(8px + env(safe-area-inset-top)) 14px 9px;
+}
+.top small{font-size:10px}
+.top h1{font-size:19px;margin-top:1px}
+.top button{padding:6px 9px;border-radius:12px}
+main{padding-top:10px}
+.hero{padding:17px 18px;border-radius:18px}
+.hero h2{font-size:21px;margin:5px 0 13px}
+.hero-pnl strong{font-size:19px}
+.metrics{gap:7px;margin:9px 0}
+.metrics button{padding:11px 7px;border-radius:14px}
+.metrics b{font-size:14px}
+.goal{padding:14px;border-radius:16px}
+.quick{gap:7px;margin:9px 0}
+.quick button{padding:11px 4px;border-radius:13px;font-size:18px}
+.quick span{font-size:10px}
+.head{margin:14px 2px 8px}
+.ai-card,.stock-card,.reservation-card,.history-card,.card{padding:13px;border-radius:16px}
+.ai-card{align-items:flex-start}
+.ai-main{min-width:0}
+.ai-topline{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.ai-topline h4{margin:0}
+.ai-stats{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.ai-stats span{background:#f4f8fb;border-radius:999px;padding:5px 8px;font-size:11px;color:var(--muted)}
+.ai-reason{margin-top:7px;color:var(--muted);font-size:12px}
+.stock-card .info{grid-template-columns:repeat(2,1fr)}
+.todo-card{background:linear-gradient(135deg,#fff9ec,#ffffff);border:1px solid #f7d995;border-radius:17px;padding:14px;box-shadow:0 5px 16px #102a430d}
+.todo-card h4{margin:0 0 5px}
+.todo-card p{margin:0;color:var(--muted);font-size:12px}
+.todo-card .todo-line{display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:10px}
+.todo-card .todo-price{font-weight:900;color:var(--orange)}
+.todo-card button{border:0;border-radius:11px;background:var(--green);color:#fff;padding:9px 12px;font-weight:800}
+.trade-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:11px}
+.trade-steps span{background:#eef7f4;color:var(--green);border-radius:10px;padding:8px 5px;text-align:center;font-size:10px;font-weight:800}
+.result{margin-top:10px}
+nav .center{margin-top:-13px}
+nav .center::first-line{line-height:1}
+nav .center{font-size:0}
+nav .center::before{
+  content:"+";
+  display:grid;
+  place-items:center;
+  width:44px;
+  height:44px;
+  margin:-13px auto 3px;
+  border-radius:15px;
+  background:var(--green);
+  color:#fff;
+  font-size:28px;
+  font-weight:500;
+  box-shadow:0 7px 18px #0f8f7640
+}
+nav .center span{
+  display:block;
+  font-size:10px;
+  margin-top:0;
+}
+nav .center:first-letter{background:none;padding:0;box-shadow:none}
+@media(min-width:900px){
+  .hero,.goal,.quick,.head,.stack,.metrics,.todo-card{max-width:900px;margin-left:auto;margin-right:auto}
+}
