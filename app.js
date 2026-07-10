@@ -17,6 +17,7 @@ const base={
  ], reservations:[], history:[]
 };
 let state=load();
+let selectedStockId=state.stocks[0]?.id||"";
 function load(){try{const x=JSON.parse(localStorage.getItem(KEY));return x?{...base,...x,settings:{...base.settings,...x.settings}}:structuredClone(base)}catch{return structuredClone(base)}}
 function save(){localStorage.setItem(KEY,JSON.stringify(state))}
 function fx(){return n(state.settings.fx)||1}
@@ -92,10 +93,68 @@ function renderHome(){
 
  $$("[data-trade]").forEach(b=>b.onclick=()=>{page("trade");$("#tradeStock").value=b.dataset.trade;refreshTrade()})
 }function renderStocks(){
- $("#stockList").innerHTML=state.stocks.map(s=>{const [l]=advice(s);return `<article class="stock-card"><div class="stock-top"><div><h3>${s.name}</h3><div class="meta">${s.ticker} · ${s.mode}</div></div><b class="${pnl(s)>=0?"pos":"neg"}">${won(pnl(s))}</b></div><div class="info"><div><span>보유</span><b>${fmt(s.qty)}주</b></div><div><span>평균가</span><b>${money(s.avg,cur(s))}</b></div><div><span>현재가</span><b>${money(s.price,cur(s))}</b></div><div><span>수익률</span><b>${(rate(s)*100).toFixed(2)}%</b></div><div><span>추천수량</span><b>${recQty(s)}주</b></div><div><span>AI추천</span><b>${l}</b></div></div><div class="actions"><button class="edit" data-edit="${s.id}">수정</button><button class="use" data-use="${s.id}">거래</button><button class="delete" data-del="${s.id}">삭제</button></div></article>`}).join("")||'<div class="empty">등록된 종목이 없습니다.</div>';
- $$("[data-edit]").forEach(b=>b.onclick=()=>openStock(b.dataset.edit));$$("[data-use]").forEach(b=>b.onclick=()=>{page("trade");$("#tradeStock").value=b.dataset.use;refreshTrade()});$$("[data-del]").forEach(b=>b.onclick=()=>{if(confirm("삭제할까요?")){state.stocks=state.stocks.filter(s=>s.id!==b.dataset.del);render()}})
-}
-function renderSelects(){const v=$("#tradeStock").value;$("#tradeStock").innerHTML=state.stocks.map(s=>`<option value="${s.id}">${s.name}</option>`).join("");if(state.stocks.some(s=>s.id===v))$("#tradeStock").value=v;$("#goalStock").innerHTML=state.stocks.map(s=>`<option value="${s.id}">${s.name}</option>`).join("")}
+ if(!state.stocks.length){
+   $("#stockRail").innerHTML='<div class="empty">종목 없음</div>';
+   $("#stockDetail").innerHTML='<div class="empty">종목을 추가해 주세요.</div>';
+   return;
+ }
+ if(!state.stocks.some(s=>s.id===selectedStockId)) selectedStockId=state.stocks[0].id;
+
+ $("#stockRail").innerHTML=state.stocks.map(s=>`
+   <button class="rail-stock ${s.id===selectedStockId?"active":""}" data-select-stock="${s.id}">
+     <strong>${s.name}</strong>
+     <small>${s.ticker||"-"} · ${s.market==="US"?"미국":"국내"}</small>
+   </button>
+ `).join("");
+
+ const s=state.stocks.find(x=>x.id===selectedStockId);
+ const [label,reason]=advice(s);
+ const waiting=state.reservations.filter(r=>r.stockId===s.id&&r.status==="waiting").length;
+ $("#stockDetail").innerHTML=`
+   <article class="stock-detail-card">
+     <div class="stock-detail-head">
+       <div>
+         <h3>${s.name}</h3>
+         <div class="meta">${s.ticker||"-"} · ${s.market==="US"?"미국":"국내"} · ${s.mode}</div>
+       </div>
+       <div class="stock-detail-pnl ${pnl(s)>=0?"pos":"neg"}">${won(pnl(s))}</div>
+     </div>
+
+     <div class="stock-detail-grid">
+       <div><span>보유수량</span><b>${fmt(s.qty)}주</b></div>
+       <div><span>목표수량</span><b>${fmt(s.target)}주</b></div>
+       <div><span>평균단가</span><b>${money(s.avg,cur(s))}</b></div>
+       <div><span>현재가</span><b>${money(s.price,cur(s))}</b></div>
+       <div><span>수익률</span><b>${(rate(s)*100).toFixed(2)}%</b></div>
+       <div><span>평가손익</span><b class="${pnl(s)>=0?"pos":"neg"}">${won(pnl(s))}</b></div>
+       <div><span>추천수량</span><b>${recQty(s)}주</b></div>
+       <div><span>대기예약</span><b>${waiting}건</b></div>
+     </div>
+
+     <div class="detail-advice">
+       <strong>AI 추천 · ${label}</strong>
+       <p>${reason}</p>
+     </div>
+
+     <div class="detail-actions">
+       <button class="detail-edit" data-detail-edit="${s.id}">정보 수정</button>
+       <button class="detail-trade" data-detail-trade="${s.id}">거래 입력</button>
+     </div>
+   </article>`;
+
+ $$("[data-select-stock]").forEach(b=>b.onclick=()=>{
+   selectedStockId=b.dataset.selectStock;
+   renderStocks();
+ });
+ const editBtn=$("[data-detail-edit]");
+ if(editBtn) editBtn.onclick=()=>openStock(editBtn.dataset.detailEdit);
+ const tradeBtn=$("[data-detail-trade]");
+ if(tradeBtn) tradeBtn.onclick=()=>{
+   page("trade");
+   $("#tradeStock").value=tradeBtn.dataset.detailTrade;
+   refreshTrade();
+ };
+}function renderSelects(){const v=$("#tradeStock").value;$("#tradeStock").innerHTML=state.stocks.map(s=>`<option value="${s.id}">${s.name}</option>`).join("");if(state.stocks.some(s=>s.id===v))$("#tradeStock").value=v;$("#goalStock").innerHTML=state.stocks.map(s=>`<option value="${s.id}">${s.name}</option>`).join("")}
 function tStock(){return state.stocks.find(s=>s.id===$("#tradeStock").value)||state.stocks[0]}
 function rotation(s,sp,sq){return[.01,.03,.05,.07].map((d,i)=>{const bp=sp*(1-d),bq=Math.floor(sp*sq/bp),extra=bq-sq,remain=s.qty-sq,avg=remain+bq>0?(remain*s.avg+bq*bp)/(remain+bq):s.avg,cash=Math.max(0,sp*sq-bp*bq);let grade="D",reason="효과 부족";if(extra>=1){grade="A";reason="수량 증가"}else if(s.avg&&((s.avg-avg)/s.avg)>=.007){grade="B";reason="평균가 개선"}else if(avg<s.avg){grade="C";reason="효과 작음"}return{id:i,d,bp,bq,extra,avg,cash,grade,reason}})}
 function refreshTrade(){const s=tStock();if(!s)return;if(!$("#tradePrice").value)$("#tradePrice").value=s.price;const type=$("#tradeType").value,p=n($("#tradePrice").value),q=n($("#tradeQty").value),rq=recQty(s);$("#recQty").textContent=`${rq}주`;$("#qtyJudge").textContent=q?q<=rq?"추천 범위":"추천보다 많음":"-";const aq=type==="buy"?s.qty+q:s.qty-q,aa=type==="buy"&&aq>0?(s.qty*s.avg+p*q)/aq:s.avg,real=type==="sell"?(p-s.avg)*q:0;$("#afterQty").textContent=`${fmt(aq)}주`;$("#afterAvg").textContent=money(aa,cur(s));$("#realized").textContent=won(krw(s,real));$("#rotationBlock").style.display=type==="sell"?"block":"none";if(type==="sell")$("#rotationList").innerHTML=rotation(s,p,q).map(o=>`<label class="option"><input class="rot" type="checkbox" data-o='${JSON.stringify(o)}'><div><b>${money(o.bp,cur(s))} · ${o.bq}주</b><small>${Math.round(o.d*100)}% 하락 · ${o.reason}</small></div><span class="grade">${o.grade}</span></label>`).join("")}
@@ -105,7 +164,7 @@ function fillRes(id){const r=state.reservations.find(x=>x.id===id),s=state.stock
 function renderHistory(){$("#historyList").innerHTML=state.history.map(h=>`<article class="history-card"><div class="history-top"><div><h3>${h.name}</h3><div class="meta">${h.date}</div></div><span class="status ${h.type==="buy"?"filled":"waiting"}">${h.type==="buy"?"매수":"매도"}</span></div><div class="details"><div><span>가격</span><b>${fmt(h.price)}</b></div><div><span>수량</span><b>${h.qty}주</b></div><div><span>보유 변화</span><b>${h.beforeQty} → ${h.afterQty}</b></div><div><span>평균가 변화</span><b>${fmt(h.beforeAvg)} → ${fmt(h.afterAvg)}</b></div><div><span>실현손익</span><b>${won(h.realized)}</b></div></div></article>`).join("")||'<div class="empty">거래 기록이 없습니다.</div>'}
 function renderSettings(){$("#userName").value=state.settings.name;$("#goalStock").value=state.settings.goal;$("#fxRate").value=state.settings.fx;$("#fxStatus").textContent=state.settings.fxDate?`최근 갱신: ${state.settings.fxDate}`:"아직 자동 갱신하지 않았습니다."}
 function openStock(id=""){const s=state.stocks.find(x=>x.id===id);$("#dialogTitle").textContent=s?"종목 수정":"종목 추가";$("#editId").value=s?.id||"";$("#sName").value=s?.name||"";$("#sTicker").value=s?.ticker||"";$("#sMarket").value=s?.market||"KR";$("#sMode").value=s?.mode||"핵심장기";$("#sQty").value=s?.qty??0;$("#sTarget").value=s?.target??100;$("#sAvg").value=s?.avg??0;$("#sPrice").value=s?.price??0;$("#stockDialog").showModal()}
-function saveStock(e){e.preventDefault();const id=$("#editId").value||uid(),s={id,name:$("#sName").value.trim(),ticker:$("#sTicker").value.trim(),market:$("#sMarket").value,mode:$("#sMode").value,qty:n($("#sQty").value),target:n($("#sTarget").value),avg:n($("#sAvg").value),price:n($("#sPrice").value)};const i=state.stocks.findIndex(x=>x.id===id);if(i>=0)state.stocks[i]=s;else state.stocks.push(s);$("#stockDialog").close();render();toast("종목을 저장했습니다.")}
+function saveStock(e){e.preventDefault();const id=$("#editId").value||uid(),s={id,name:$("#sName").value.trim(),ticker:$("#sTicker").value.trim(),market:$("#sMarket").value,mode:$("#sMode").value,qty:n($("#sQty").value),target:n($("#sTarget").value),avg:n($("#sAvg").value),price:n($("#sPrice").value)};const i=state.stocks.findIndex(x=>x.id===id);if(i>=0)state.stocks[i]=s;else state.stocks.push(s);selectedStockId=id;$("#stockDialog").close();render();toast("종목을 저장했습니다.")}
 async function updateFx(){try{$("#fxStatus").textContent="환율 조회 중...";const r=await fetch("https://api.frankfurter.dev/v2/rate/USD/KRW",{cache:"no-store"});if(!r.ok)throw Error();const d=await r.json();state.settings.fx=n(d.rate);state.settings.fxDate=d.date||day();render();toast("환율을 업데이트했습니다.")}catch{$("#fxStatus").textContent="자동 조회 실패. 기존 환율을 유지합니다.";toast("환율 조회에 실패했습니다.")}}
 function exportData(){const b=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=`my-asset-v10-${day()}.json`;a.click();URL.revokeObjectURL(a.href)}
 function importData(file){const r=new FileReader();r.onload=()=>{try{state=JSON.parse(r.result);render();page("home");toast("백업을 복원했습니다.")}catch{toast("백업 파일 오류")}};r.readAsText(file)}
