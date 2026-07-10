@@ -78,7 +78,7 @@
     <div class="grid">
       <label>종목<select id="tradeStock"></select></label>
       <label>구분<select id="tradeType"><option value="sell">매도</option><option value="buy">매수</option></select></label>
-      <label>가격<input id="tradePrice" type="number" inputmode="decimal" step="any"></label>
+      <label>가격<input id="tradePrice" type="text" inputmode="decimal" autocomplete="off" placeholder="예: 16.77"></label>
       <label>수량<input id="tradeQty" type="number" inputmode="numeric" step="1" min="1"></label>
     </div>
   </div>
@@ -149,8 +149,8 @@
 <label>운용구분<select id="sMode"><option>핵심장기</option><option>회전매매</option><option>손실회복</option></select></label>
 <label>보유수량<input id="sQty" type="number" inputmode="decimal" step="1" min="0"></label>
 <label>목표수량<input id="sTarget" type="number" inputmode="decimal" step="1" min="0"></label>
-<label>평균단가<input id="sAvg" type="number" inputmode="decimal" step="any"></label>
-<label>현재가<input id="sPrice" type="number" inputmode="decimal" step="any"></label>
+<label>평균단가<input id="sAvg" type="text" inputmode="decimal" autocomplete="off" placeholder="예: 16.77"></label>
+<label>현재가<input id="sPrice" type="text" inputmode="decimal" autocomplete="off" placeholder="예: 9.56"></label>
 </div>
 <button class="cta">저장</button>
 </form>

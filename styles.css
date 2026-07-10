@@ -249,3 +249,10 @@ input[type="number"]{font-variant-numeric:tabular-nums}
   .stock-detail-head{display:block}
   .stock-detail-pnl{margin-top:6px}
 }
+
+
+/* v10.2.1 decimal price input */
+#tradePrice,#sAvg,#sPrice{
+  font-variant-numeric:tabular-nums;
+  text-align:left;
+}

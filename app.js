@@ -3,7 +3,12 @@ const KEY="my_asset_pro_v10";
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const uid=()=>crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2);
 const day=()=>new Date().toISOString().slice(0,10);
-const n=x=>Number(x)||0;
+const n=x=>{
+  if(typeof x==="number") return Number.isFinite(x)?x:0;
+  const cleaned=String(x??"").trim().replace(/\s/g,"").replace(",",".");
+  const value=Number(cleaned);
+  return Number.isFinite(value)?value:0;
+};
 const fmt=x=>n(x).toLocaleString(undefined,{maximumFractionDigits:2});
 const won=x=>`${Math.round(n(x)).toLocaleString()}원`;
 const base={
@@ -168,6 +173,23 @@ function saveStock(e){e.preventDefault();const id=$("#editId").value||uid(),s={i
 async function updateFx(){try{$("#fxStatus").textContent="환율 조회 중...";const r=await fetch("https://api.frankfurter.dev/v2/rate/USD/KRW",{cache:"no-store"});if(!r.ok)throw Error();const d=await r.json();state.settings.fx=n(d.rate);state.settings.fxDate=d.date||day();render();toast("환율을 업데이트했습니다.")}catch{$("#fxStatus").textContent="자동 조회 실패. 기존 환율을 유지합니다.";toast("환율 조회에 실패했습니다.")}}
 function exportData(){const b=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=`my-asset-v10-${day()}.json`;a.click();URL.revokeObjectURL(a.href)}
 function importData(file){const r=new FileReader();r.onload=()=>{try{state=JSON.parse(r.result);render();page("home");toast("백업을 복원했습니다.")}catch{toast("백업 파일 오류")}};r.readAsText(file)}
+
+function normalizeDecimalInput(el){
+  const raw=String(el.value||"").trim().replace(",",".");
+  if(raw==="") return;
+  const value=Number(raw);
+  if(Number.isFinite(value)) el.value=String(value);
+}
+["tradePrice","sAvg","sPrice"].forEach(id=>{
+  const el=$("#"+id);
+  if(el){
+    el.addEventListener("blur",()=>normalizeDecimalInput(el));
+    el.addEventListener("input",()=>{
+      el.value=el.value.replace(/[^0-9.,-]/g,"");
+    });
+  }
+});
+
 document.addEventListener("click",e=>{const b=e.target.closest("[data-page]");if(b)page(b.dataset.page)});
 $("#addStock").onclick=()=>openStock();$("#closeDialog").onclick=()=>$("#stockDialog").close();$("#stockForm").onsubmit=saveStock;
 ["tradeStock","tradeType","tradePrice","tradeQty"].forEach(id=>$("#"+id).addEventListener("input",refreshTrade));
