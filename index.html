@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f8f76">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="내 자산 PRO">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="styles.css">
+<title>내 자산 PRO v10</title>
+</head>
+<body>
+<div id="app">
+<header class="top">
+  <div><small>MY ASSET PRO v10</small><h1 id="title">대시보드</h1></div>
+  <button id="fxBadge"><span>USD/KRW</span><b id="fxTop">-</b></button>
+</header>
+
+<main>
+<section id="home" class="page active">
+  <div class="hero">
+    <p id="hello">안녕하세요.</p>
+    <h2>오늘도 원칙대로, 한 주씩.</h2>
+    <div class="hero-pnl"><span>총 평가손익</span><strong id="totalPnl">0원</strong></div>
+  </div>
+
+  <div class="metrics">
+    <button data-page="stocks"><span>총 평가금액</span><b id="totalValue">0원</b></button>
+    <button data-page="stocks"><span>보유 종목</span><b id="stockCount">0개</b></button>
+    <button data-page="reservations"><span>대기 예약</span><b id="resCount">0건</b></button>
+  </div>
+
+  <button class="goal" data-page="stocks">
+    <div><span>대표 목표</span><h3 id="goalName">삼성전자</h3></div>
+    <strong id="goalText">0 / 100주</strong>
+    <div class="bar"><i id="goalBar"></i></div>
+  </button>
+
+  <div class="quick">
+    <button data-page="trade">↔<span>거래입력</span></button>
+    <button data-page="reservations">▣<span>예약관리</span></button>
+    <button data-page="history">☷<span>거래일지</span></button>
+    <button data-page="stocks">🤖<span>AI 추천</span></button>
+  </div>
+
+  <div class="head"><h3>오늘의 AI 추천</h3><button data-page="stocks">전체 보기</button></div>
+  <div id="aiList" class="stack"></div>
+
+  <div class="head"><h3>주요 보유 종목</h3><button data-page="stocks">종목 관리</button></div>
+  <div id="homeStocks" class="stack"></div>
+</section>
+
+<section id="stocks" class="page">
+  <div class="head sticky"><h2>종목 관리</h2><button id="addStock">+ 종목 추가</button></div>
+  <div id="stockList" class="stack"></div>
+</section>
+
+<section id="trade" class="page">
+  <div class="card">
+    <h2>거래 입력</h2>
+    <div class="grid">
+      <label>종목<select id="tradeStock"></select></label>
+      <label>구분<select id="tradeType"><option value="sell">매도</option><option value="buy">매수</option></select></label>
+      <label>가격<input id="tradePrice" type="number" inputmode="decimal"></label>
+      <label>수량<input id="tradeQty" type="number" inputmode="numeric"></label>
+    </div>
+  </div>
+
+  <div class="result">
+    <div><span>추천 수량</span><b id="recQty">0주</b></div>
+    <div><span>입력 판단</span><b id="qtyJudge">-</b></div>
+    <div><span>거래 후 수량</span><b id="afterQty">0주</b></div>
+    <div><span>거래 후 평균가</span><b id="afterAvg">0</b></div>
+    <div><span>예상 실현손익</span><b id="realized">0원</b></div>
+  </div>
+
+  <div id="rotationBlock">
+    <div class="head"><h3>예약매수 추천</h3><small>원하는 구간만 선택</small></div>
+    <div id="rotationList" class="stack"></div>
+  </div>
+
+  <button id="confirmTrade" class="cta">거래 확정 · 자동기입</button>
+  <p class="note">거래일지와 선택한 예약이 자동으로 저장됩니다.</p>
+</section>
+
+<section id="reservations" class="page">
+  <div class="head sticky"><h2>예약 관리</h2>
+    <select id="resFilter"><option value="waiting">대기</option><option value="filled">체결</option><option value="all">전체</option></select>
+  </div>
+  <div id="resList" class="stack"></div>
+</section>
+
+<section id="history" class="page">
+  <div class="head sticky"><h2>거래 일지</h2><button id="clearHistory" class="red-text">전체 삭제</button></div>
+  <div id="historyList" class="stack"></div>
+</section>
+
+<section id="settings" class="page">
+  <div class="card">
+    <h2>설정</h2>
+    <label>사용자 이름<input id="userName"></label>
+    <label>대표 목표 종목<select id="goalStock"></select></label>
+    <label>USD/KRW 환율<input id="fxRate" type="number" inputmode="decimal"></label>
+    <div class="row"><button id="updateFx" class="soft">환율 업데이트</button><button id="saveSettings" class="primary">저장</button></div>
+    <p id="fxStatus" class="note"></p>
+  </div>
+  <div class="card">
+    <h3>백업과 복원</h3>
+    <p class="note">데이터는 이 기기에 저장됩니다. 백업 파일을 iCloud Drive 또는 Google Drive에 보관하세요.</p>
+    <div class="row"><button id="exportData" class="soft">백업 내보내기</button><label class="file">백업 불러오기<input id="importData" type="file" accept=".json" hidden></label></div>
+  </div>
+  <div class="card danger"><h3>초기화</h3><button id="resetData">모든 데이터 초기화</button></div>
+</section>
+</main>
+
+<nav>
+<button data-page="home" class="active">⌂<span>홈</span></button>
+<button data-page="stocks">▦<span>종목</span></button>
+<button data-page="trade" class="center">＋<span>거래</span></button>
+<button data-page="reservations">◷<span>예약</span></button>
+<button data-page="history">☷<span>일지</span></button>
+</nav>
+
+<dialog id="stockDialog">
+<form id="stockForm">
+<div class="dialog-head"><h3 id="dialogTitle">종목 추가</h3><button type="button" id="closeDialog">×</button></div>
+<input id="editId" type="hidden">
+<label>종목명<input id="sName" required></label>
+<label>티커<input id="sTicker"></label>
+<div class="grid">
+<label>시장<select id="sMarket"><option value="KR">국내</option><option value="US">미국</option></select></label>
+<label>운용구분<select id="sMode"><option>핵심장기</option><option>회전매매</option><option>손실회복</option></select></label>
+<label>보유수량<input id="sQty" type="number" inputmode="decimal"></label>
+<label>목표수량<input id="sTarget" type="number" inputmode="decimal"></label>
+<label>평균단가<input id="sAvg" type="number" inputmode="decimal"></label>
+<label>현재가<input id="sPrice" type="number" inputmode="decimal"></label>
+</div>
+<button class="cta">저장</button>
+</form>
+</dialog>
+
+<div id="toast"></div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
